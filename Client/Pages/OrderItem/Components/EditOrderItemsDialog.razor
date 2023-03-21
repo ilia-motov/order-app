@@ -1,0 +1,68 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudTextField T="string" @bind-Value="Order.Name" Label="Наименование" Required></MudTextField>
+        <MudTextField T="DateTime" @bind-Value="Order.Date" Label="Дата" Required></MudTextField>
+        <Autocomplete T="ProviderDto" @bind-Value="Order.Provider" Label="Поставщики" />
+        <OrderItemTable OrderId="Order.Id" Items="Order.Items"></OrderItemTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public OrderDto Order { get; set; }
+
+    [Inject]
+    public HttpClient Http { get; set; }
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; }
+
+    private async Task Submit()
+    {
+        if (Order == null)
+            return;
+
+        if (Order.Date > DateTime.Now || Order.Date < new DateTime(1990,1,1))
+        {
+            Snackbar.Add("Некорректная дата", Severity.Warning);
+            return;
+        }
+
+        if (Order.Name == string.Empty)
+        {
+            Snackbar.Add("Заполните поле: Наименование", Severity.Warning);
+            return;
+        }
+
+        if (Order.Provider == null)
+        {
+            Snackbar.Add("Заполните поле: Поставщики", Severity.Warning);
+            return;
+        }
+        Order.ProviderId = Order.Provider.Id;
+
+        try
+        {
+            var response = await Http.PatchAsJsonAsync<OrderDto>("api/Order", Order);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                Snackbar.Add(message, Severity.Warning);
+            }
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message);
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

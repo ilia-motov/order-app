@@ -1,0 +1,53 @@
+﻿@inject HttpClient httpClient
+@inject ISnackbar Snackbar
+
+<MudTable @ref="_table"
+          Items="@Items"
+          MultiSelection="true"
+          CanCancelEdit="true"
+          Filter="new Func<OrderItemDto,bool>(FilterFunc)"
+          @bind-SelectedItem="selectedItem1"
+          SortLabel="Sort By"
+          CommitEditTooltip="Commit Edit"
+          OnCommitEditClick="@(() => Snackbar.Add("Commit Edit Handler Invoked"))"
+          RowEditPreview="BackupItem"
+          RowEditCancel="ResetItemToOriginalValues"
+          RowEditCommit="ItemHasBeenCommitted"
+          IsEditRowSwitchingBlocked="@blockSwitch"
+          ApplyButtonPosition="@applyButtonPosition"
+          EditButtonPosition="@editButtonPosition"
+          EditTrigger="@editTrigger">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Эементы заказа</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<OrderItemDto, object>(x=>x.Name)">Название</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<OrderItemDto, object>(x=>x.Quantity)">Количество</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<OrderItemDto, object>(x=>x.Unit)">Ед.изм.</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+        <MudTd DataLabel="Unit">@context.Unit</MudTd>
+    </RowTemplate>
+    <RowEditingTemplate>
+        <MudTd DataLabel="Name">
+            <MudTextField @bind-Value="@context.Name" Required />
+        </MudTd>
+        <MudTd DataLabel="Quantity">
+            <MudNumericField @bind-Value="@context.Quantity" Required Min="1" />
+        </MudTd>
+        <MudTd DataLabel="Unit">
+            <MudTextField @bind-Value="@context.Unit" Required />
+        </MudTd>
+    </RowEditingTemplate>
+    <EditButtonContent Context="button">
+        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+    </EditButtonContent>
+</MudTable>
+
+<MudButton Class="mt-10" Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await Delete())">Удалить элемент</MudButton>
+<MudButton Class="mt-10" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await Create())">Добавить элемент</MudButton>
+

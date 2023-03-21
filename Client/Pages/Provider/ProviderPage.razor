@@ -1,0 +1,62 @@
+﻿@page "/providers"
+
+<PageTitle>Заказы</PageTitle>
+
+<MudButton Class="mb-16" Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await Delete())">Удалить</MudButton>
+<MudButton Class="mb-16" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await Create())">Создать</MudButton>
+
+<MudTable
+    ServerData="@(new Func<TableState, Task<TableData<ProviderDto>>>(ServerReload))"
+    MultiSelection="true"
+    Hover="true"
+    CanCancelEdit="true"
+    SortLabel="Sort By"
+    CommitEditTooltip="Сохранить"
+    OnCommitEditClick="@(() => Snackbar.Add("Элемент сохранен"))"
+    RowEditPreview="BackupItem"
+    RowEditCancel="ResetItemToOriginalValues"
+    RowEditCommit="ItemHasBeenCommitted"
+    IsEditRowSwitchingBlocked="true"
+    ApplyButtonPosition="TableApplyButtonPosition.End"
+    EditButtonPosition="TableEditButtonPosition.End"
+    EditTrigger="TableEditTrigger.EditButton"
+    Breakpoint="Breakpoint.Sm"
+    LoadingProgressColor="Color.Info"
+    @ref="_table">
+
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Поставщики</MudText>
+        <MudSpacer />
+        <MudTextField
+            T="string"
+            ValueChanged="@(async (s) => OnSearch(s))"
+            Placeholder="Поиск"
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search"
+            IconSize="Size.Medium"
+            Class="mt-0">
+        </MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="@nameof(ProviderDto.Name)" T="ProviderDto">Наименование</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="@nameof(ProviderDto.Name)">@context.Name</MudTd>
+    </RowTemplate>
+    <RowEditingTemplate>
+        <MudTd DataLabel="@nameof(ProviderDto.Name)">
+            <MudTextField @bind-Value="@context.Name" Required />
+        </MudTd>
+    </RowEditingTemplate>
+    <NoRecordsContent>
+        <MudText>Совпадающих записей не найдено</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Загрузка...</MudText>
+    </LoadingContent>
+    <EditButtonContent Context="button">
+        <MudIconButton Size="@Size.Small" Icon="@Icons.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+    </EditButtonContent>
+</MudTable>
+
+

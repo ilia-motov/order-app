@@ -1,0 +1,51 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudTextField T="string" @bind-Value="Name" Label="Название"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string Name { get; set; } = "";
+
+    [Inject]
+    public HttpClient Http { get; set; }
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; }
+
+    private async Task Submit()
+    {
+        var provider = new ProviderDto { Name = Name };
+
+        if (provider.Name == null)
+        {
+            Snackbar.Add("Заполните поле: Название", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var response = await Http.PutAsJsonAsync<ProviderDto>("api/Provider", provider);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                Snackbar.Add(message, Severity.Error);
+            }
+            provider.Id = int.Parse(await response.Content.ReadAsStringAsync());
+        }
+        catch (Exception e)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(provider));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,85 @@
+﻿@using OrderApp.Client.Services;
+@typeparam T where T : class, IDto
+
+<MudAutocomplete T="T"
+                 Required = "true"
+                 Label=@Label
+                 @bind-Value="Value"
+                 @bind-Value:after="UpdateValue"
+                 SearchFunc="@Search"
+                 ToStringFunc="@(d => d == null ? null : d.Name)"
+                 ShowProgressIndicator="true"
+                 ProgressIndicatorColor="Color.Default"
+                 @ref="_autocomplete">
+    <NoItemsTemplate>
+        <MudText Align="Align.Start" Class="ml-5">
+            Ничего не найдено
+            <MudButton Class="ml-5 text-center"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="@(async () => await Create())">
+                Создать
+            </MudButton>
+        </MudText>
+    </NoItemsTemplate>
+</MudAutocomplete>
+
+@code {
+    private MudAutocomplete<T>? _autocomplete;
+
+    [Parameter]
+    public string Label { get; set; }
+
+    [Parameter]
+    public T Value { get; set; }
+
+    [Parameter]
+    public EventCallback<T> ValueChanged { get; set; }
+
+    [Inject]
+    public HttpClient Http { get; set; }
+
+    [Inject]
+    public ICreateDialogService CreateDialogService { get; set; }
+
+    private async Task<IEnumerable<T>> Search(string value)
+    {
+        if (typeof(T) == typeof(OrderDto))
+        {
+            var orders = await Http.GetFromJsonAsync<List<T>>($"api/Order/Autocomplete?searchString={value}");
+            return orders;
+        }
+
+        else if (typeof(T) == typeof(OrderItemDto))
+        {
+            var orderItems = await Http.GetFromJsonAsync<List<T>>($"api/OrderItem/Autocomplete?searchString={value}");
+            return orderItems;
+        }
+
+        else if (typeof(T) == typeof(ProviderDto))
+        {
+            var providers = await Http.GetFromJsonAsync<List<T>>($"api/Provider/Autocomplete?searchString={value}");
+            return providers;
+        }
+
+        return new List<T>();
+    }
+
+    private async Task UpdateValue() => await ValueChanged.InvokeAsync(Value);
+
+    private async Task Create()
+    {
+        var name = _autocomplete.Text;
+        await _autocomplete.Clear();
+
+        var value = await CreateDialogService.Show<T>(name);
+        if (value is null)
+            return;
+
+        _autocomplete.Value = value;
+        _autocomplete.Text = value.Name;
+
+        Value = value;
+        await UpdateValue();
+    }
+}

@@ -1,0 +1,83 @@
+﻿@page "/orders"
+@using OrderApp.Client.Pages.OrderItem.Components
+
+<PageTitle>Заказы</PageTitle>
+
+<MudButton Class="mb-10" Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(async () => await Delete())">Удалить заказ</MudButton>
+<MudButton Class="mb-10" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await Create())">Создать заказ</MudButton>
+
+<div class="row">
+    <div class="col-2">
+        <MudDatePicker DateChanged="@(async (date) => await SetStartDate(date))" IconSize="Size.Small" Label="От" />
+    </div>
+    <div class="col-2">
+        <MudDatePicker DateChanged="@(async (date) => await SetEndDate(date))" IconSize="Size.Small" Label="До" />
+    </div>
+    <div class="col-2">
+        <SelectFilter ValueChanged="UpdateProviderFilter" T="ProviderDto"></SelectFilter>
+    </div>
+    <div class="col-2">
+        <SelectFilter ValueChanged="UpdateOrderFilter" T="OrderDto"></SelectFilter>
+    </div>
+</div>
+
+
+<MudTable
+    ServerData="@(new Func<TableState, Task<TableData<OrderDto>>>(ServerReload))"
+    MultiSelection="true"
+    Hover="true"
+    SortLabel="Sort By"
+    CommitEditTooltip="Сохранить"
+    OnCommitEditClick="@(() => Snackbar.Add("Элемент сохранен"))"
+    ApplyButtonPosition="TableApplyButtonPosition.End"
+    EditButtonPosition="TableEditButtonPosition.End"
+    EditTrigger="TableEditTrigger.EditButton"
+    Breakpoint="Breakpoint.Sm"
+    LoadingProgressColor="Color.Info"
+    @ref="_table">
+
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Заказы</MudText>
+        <MudSpacer />
+        <MudTextField
+            T="string"
+            ValueChanged="@(async (s) => OnSearch(s))"
+            Placeholder="Поиск"
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search"
+            IconSize="Size.Medium"
+            Class="mt-0">
+        </MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="@nameof(OrderDto.Name)" T="OrderDto">Номер заказа</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="@nameof(OrderDto.Date)" T="OrderDto">Дата</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="@nameof(OrderDto.Provider.Name)" T="OrderDto">Поставщик</MudTableSortLabel></MudTh>
+        <MudTh>Детали</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="@nameof(OrderDto.Name)">@context.Name</MudTd>
+        <MudTd DataLabel="@nameof(OrderDto.Date)">@context.Date.ToShortDateString()</MudTd>
+        <MudTd DataLabel="@nameof(OrderDto.Provider.Name)">@context.Provider.Name</MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Text" Color="Color.Info" OnClick="@(async () => await ShowOrderItems(@context))">Подробнее</MudButton>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>Совпадающих записей не найдено</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Загрузка...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    <EditButtonContent Context="button">
+        <MudIconButton Size="@Size.Small" Icon="@Icons.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+    </EditButtonContent>
+</MudTable>
+
+
+
+
+

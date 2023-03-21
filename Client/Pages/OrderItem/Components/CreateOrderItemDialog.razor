@@ -1,0 +1,42 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudTextField T="string" @bind-Value="Name" Label="Наименование"></MudTextField>
+        <MudTextField T="int" @bind-Value="Quantity" Label="Количество"></MudTextField>
+        <MudTextField T="string" @bind-Value="Unit" Label="Единица измерения"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Добавить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public int OrderId { get; set; }
+
+    [Parameter] public string Name { get; set; }
+
+    [Parameter] public int Quantity { get; set; }
+
+    [Parameter] public string Unit { get; set; }
+
+    [Inject]
+    public HttpClient Http { get; set; }
+
+    private async Task Submit()
+    {
+        var orderItemDto = new OrderItemDto
+            {
+                Name = Name,
+                Quantity = Quantity,
+                Unit = Unit,
+                OrderId = OrderId
+            };
+
+        MudDialog.Close(DialogResult.Ok(orderItemDto));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

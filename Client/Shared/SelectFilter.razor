@@ -1,0 +1,46 @@
+﻿@typeparam T where T : class, IDto
+
+<MudSelect 
+    T="T" 
+    Label=@Label 
+    MultiSelection="true"
+    @bind-SelectedValues="Value"
+    @bind-SelectedValues:after="UpdateValue">
+    @foreach (var state in _items)
+    {
+        <MudSelectItem T="T" Value="@state">@state.Name</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+
+    private List<T> _items = new List<T>();
+
+    [Inject]
+    public HttpClient Http { get; set; }
+
+    [Parameter]
+    public string Label { get; set; }
+
+    [Parameter]
+    public IEnumerable<T> Value { get; set; } = new HashSet<T>();
+
+    [Parameter]
+    public EventCallback<IEnumerable<T>> ValueChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (typeof(T) == typeof(ProviderDto))
+        {
+            _items = await Http.GetFromJsonAsync<List<T>>("api/Provider/ReadProviderForFilter");
+            Label = "Поставщики";
+        }
+        else if (typeof(T) == typeof(OrderDto))
+        {
+            _items = await Http.GetFromJsonAsync<List<T>>("api/Order/ReadOrdersForFilter");
+            Label = "Номера заказов";
+        }
+    }
+
+    private async Task UpdateValue() => await ValueChanged.InvokeAsync(Value);
+}
